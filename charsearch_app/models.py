@@ -15,12 +15,12 @@ class Character(models.Model):
     remaps = models.IntegerField(default=0)
 
 
-class NPC_Corp(models.Model):
+class NpcCorp(models.Model):
     name = models.CharField(max_length=256)
 
 
 class Standing(models.Model):
-    corp = models.ForeignKey(NPC_Corp)
+    corp = models.ForeignKey(NpcCorp, on_delete=models.CASCADE)
     value = models.DecimalField(max_digits=4, decimal_places=2)
 
 
@@ -29,16 +29,16 @@ class Skill(models.Model):
     typeID = models.IntegerField(db_index=True)
     groupID = models.IntegerField()
     groupName = models.CharField(max_length=64)
-    description = models.CharField(max_length=256)
+    description = models.TextField()
     rank = models.SmallIntegerField()
     published = models.BooleanField(default=False)
 
 
 class CharSkill(models.Model):
-    character = models.ForeignKey(Character, db_index=True)
+    character = models.ForeignKey(Character, db_index=True, on_delete=models.CASCADE)
     skill_points = models.IntegerField()
     level = models.IntegerField(db_index=True)
-    skill = models.ForeignKey(Skill)
+    skill = models.ForeignKey(Skill, on_delete=models.CASCADE)
     typeID = models.IntegerField(db_index=True, default=1)
 
     class Meta:
@@ -48,22 +48,23 @@ class CharSkill(models.Model):
 class Thread(models.Model):
     last_update = models.DateTimeField(default=now, db_index=True)
     blacklisted = models.BooleanField()
-    thread_text = models.CharField(max_length=2000, null=True)
-    thread_title = models.CharField(max_length=100)
+    thread_text = models.TextField(null=True)
+    thread_title = models.TextField()
     thread_id = models.IntegerField()
-    character = models.ForeignKey(Character, null=True)
+    thread_slug = models.TextField()
+    character = models.ForeignKey(Character, null=True, on_delete=models.CASCADE)
     title_history = models.ManyToManyField('ThreadTitle', related_name='previous_titles')
 
 
 class ThreadTitle(models.Model):
-    title = models.CharField(max_length=500)
+    title = models.TextField()
     date = models.DateTimeField(default=now)
 
 
 class RequiredSkill(models.Model):
     typeID = models.IntegerField(db_index=True)
     level = models.IntegerField(db_index=True)
-    skill = models.ForeignKey(Skill)
+    skill = models.ForeignKey(Skill, on_delete=models.CASCADE)
 
 
 class Ship(models.Model):

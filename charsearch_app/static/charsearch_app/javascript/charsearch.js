@@ -125,9 +125,9 @@ function start() {
 function addFilter() {
   var delbutton = makeDelButton()
   var filterType = makeFilterTypeSelect('skill')
-  var catBox = makeSkillCatBox(filter_n, '266')
+  var catBox = makeSkillCatBox(filter_n, '1210')
   var opBox = makeOperandsBox(filter_n)
-  var skillBox = makeSkillBox(filter_n, '266', '11584')
+  var skillBox = makeSkillBox(filter_n, '1210', '33078')
   var levelBox = makeLevelBox(filter_n)
   var rowDiv = document.createElement('div')
   rowDiv.className = 'filter row'
@@ -236,6 +236,7 @@ function makeFilterTypeSelect(selectedType) {
   if (selectedType == 'standing') {
     standing.selected = true
   }
+  /* TODO: character/ship search
   var cname = document.createElement('option')
   cname.value = 'cname'
   cname.innerHTML = 'Character Name'
@@ -249,7 +250,7 @@ function makeFilterTypeSelect(selectedType) {
   filterType.appendChild(ship)
   if (selectedType == 'ship') {
     ship.selected = true;
-  }
+  }*/
   return filterType
 }
 

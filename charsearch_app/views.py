@@ -1,6 +1,6 @@
 import json
 
-from charsearch_app.models import NPC_Corp, Ship, Skill, Thread
+from charsearch_app.models import NpcCorp, Ship, Skill, Thread
 from django.core import serializers
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Q
@@ -12,7 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 @cache_page(60 * 120)
 def npc_corps_json(request):
-    serialized = serializers.serialize('json', NPC_Corp.objects.all().order_by('name'))
+    serialized = serializers.serialize('json', NpcCorp.objects.all().order_by('name'))
     return HttpResponse(serialized, content_type='application/json')
 
 
@@ -49,14 +49,15 @@ def unfavorite(request, thread_id):
 
 @csrf_exempt
 def index(request):
-    context = {}
-    context['threads'] = []
+    context = {
+        'threads': []
+    }
     if len(request.GET) > 0:
-        filters = parseFilters(request.GET)
+        filters = parse_filters(request.GET)
     else:
         filters = None
     if filters:
-        q_objects = generateQObjects(filters)
+        q_objects = generate_q_objects(filters)
     else:
         q_objects = []
     if q_objects:
@@ -86,7 +87,7 @@ def index(request):
     return render(request, 'charsearch_app/home.html', context)
 
 
-def parseFilters(post):
+def parse_filters(post):
     filters = {}
     for key in post.keys():
         if key == 'page':
@@ -117,11 +118,10 @@ def parseFilters(post):
             filters[filter_number]['stringOpSelect'] = post[key]
         elif code == 'sh':
             filters[filter_number]['ship_itemID'] = post[key]
-
     return [value for (key, value) in sorted(filters.items())]
 
 
-def generateQObjects(filters):
+def generate_q_objects(filters):
     results = []
     for f in filters:
         if f['filterType'] == "sp":

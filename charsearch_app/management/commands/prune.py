@@ -1,11 +1,9 @@
 import logging
 from datetime import datetime, timedelta
-
 from django.core.management.base import BaseCommand
-
 from charsearch_app.models import Thread
 
-logger = logging.getLogger("charsearch.prune")
+logger = logging.getLogger("charsearch_app.prune")
 
 
 class Command(BaseCommand):
@@ -30,18 +28,18 @@ class Command(BaseCommand):
             logger.setLevel(logging.DEBUG)
         if verbosity > 2:
             logger.setLevel(logging.DEBUG)
+        prune_threads(options['days'])
 
-        self.prune_threads(options['days'])
 
-    def prune_threads(days):
-        killdate = datetime.now() - timedelta(days=days)
-        to_prune = Thread.objects.filter(last_update__lte=killdate)
-        for pruner in to_prune:
-            print 'Removing [%s] thread that is expired past %s days' % (pruner.thread_title, days)
-            if pruner.character:
-                for skill in pruner.character.skills.all():
-                    skill.delete()
-                for standing in pruner.character.standings.all():
-                    standing.delete()
-                pruner.character.delete()
-        to_prune.delete()
+def prune_threads(days):
+    killdate = datetime.now() - timedelta(days=days)
+    to_prune = Thread.objects.filter(last_update__lte=killdate)
+    for pruner in to_prune:
+        print('Removing [%s] thread that is expired past %s days' % (pruner.thread_title, days))
+        if pruner.character:
+            for skill in pruner.character.skills.all():
+                skill.delete()
+            for standing in pruner.character.standings.all():
+                standing.delete()
+            pruner.character.delete()
+    to_prune.delete()
