@@ -6,9 +6,7 @@ from django.utils.timezone import now
 
 class Character(models.Model):
     name = models.CharField(max_length=64, db_index=True)
-    skills = models.ManyToManyField('CharSkill', related_name='learned_by')
     total_sp = models.BigIntegerField()
-    standings = models.ManyToManyField('Standing', related_name='standing_to')
     last_update = models.DateTimeField(default=now)
     password = models.CharField(max_length=64, blank=True)
     unspent_skillpoints = models.IntegerField(default=0)
@@ -19,7 +17,8 @@ class NpcCorp(models.Model):
     name = models.CharField(max_length=256)
 
 
-class Standing(models.Model):
+class CharStanding(models.Model):
+    character = models.ForeignKey('Character', on_delete=models.CASCADE, related_name='standings')
     corp = models.ForeignKey(NpcCorp, on_delete=models.CASCADE)
     value = models.DecimalField(max_digits=4, decimal_places=2)
 
@@ -35,7 +34,7 @@ class Skill(models.Model):
 
 
 class CharSkill(models.Model):
-    character = models.ForeignKey(Character, db_index=True, on_delete=models.CASCADE)
+    character = models.ForeignKey('Character', db_index=True, on_delete=models.CASCADE, related_name='skills')
     skill_points = models.IntegerField()
     level = models.IntegerField(db_index=True)
     skill = models.ForeignKey(Skill, on_delete=models.CASCADE)
@@ -52,11 +51,11 @@ class Thread(models.Model):
     thread_title = models.TextField()
     thread_id = models.IntegerField()
     thread_slug = models.TextField()
-    character = models.ForeignKey(Character, null=True, on_delete=models.CASCADE)
-    title_history = models.ManyToManyField('ThreadTitle', related_name='previous_titles')
+    character = models.ForeignKey('Character', null=True, on_delete=models.CASCADE)
 
 
 class ThreadTitle(models.Model):
+    thread = models.ForeignKey(Thread, on_delete=models.CASCADE, related_name='title_history')
     title = models.TextField()
     date = models.DateTimeField(default=now)
 

@@ -5,7 +5,7 @@ import json
 from dateutil import parser
 from bs4 import BeautifulSoup
 from django.utils.timezone import now
-from charsearch_app.models import Thread, ThreadTitle, Character, CharSkill, NpcCorp, Standing, Skill
+from charsearch_app.models import Thread, ThreadTitle, Character, CharSkill, NpcCorp, CharStanding, Skill
 
 logger = logging.getLogger("charsearch_app.tasks.scrape")
 
@@ -42,15 +42,16 @@ def buildchar(char_dict):
         cs.typeID = base_skill.typeID
         cs.save()
         logger.debug("Created CharSkill for {0}".format(skill))
-        char.skills.add(cs)
     for standing in char_dict['standings']:
         corp = NpcCorp.objects.filter(name=standing[0]).first()
         if corp:
-            char.standings.add(Standing.objects.create(corp=corp, value=standing[1]))
+            char_standing = CharStanding.objects.create(character=char,corp=corp, value=standing[1])
+            char_standing.save()
         else:
             corp = NpcCorp.objects.create(name=standing[0])
             corp.save()
-            char.standings.add(Standing.objects.create(corp=corp, value=standing[1]))
+            char_standing = CharStanding.objects.create(character=char, corp=corp, value=standing[1])
+            char_standing.save()
             logger.info('Created new npc corp {0}'.format(standing[0]))
     char.last_update = now()
     char.unspent_skillpoints = char_dict['stats']['unallocated_sp']
@@ -249,9 +250,12 @@ def scrape_eveo(page_range):
             if existing_thread.last_update != thread['last_post']:
                 existing_thread.last_update = thread['last_post']
             if existing_thread.thread_title != thread['title']:
-                old_title = ThreadTitle(title=thread['title'], date=now())
+                old_title = ThreadTitle(
+                    thread=existing_thread,
+                    title=existing_thread.thread_title,
+                    date=now()
+                )
                 old_title.save()
-                existing_thread.title_history.add(old_title)
                 existing_thread.thread_title = thread['title']
                 existing_thread.thread_slug = thread['slug']
             existing_thread.save()
