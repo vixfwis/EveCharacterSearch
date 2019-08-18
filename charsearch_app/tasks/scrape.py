@@ -10,12 +10,13 @@ from charsearch_app.models import Thread, ThreadTitle, Character, CharSkill, Npc
 logger = logging.getLogger("charsearch_app.tasks.scrape")
 
 R_SKILL = re.compile(r"(.+[\w'-]+) / Rank (\d{1,2}) / Level: (\d) / SP: ([\d,]+) of ([\d,]+)")
+R_PILOT_NAME = re.compile(r".*eveskillboard.com/pilot/([\w'-]+)")
+RS_PWD = [re.compile(r"[pP][wW][\w]*\s*[=\-\:]*\s*([\w]*)"), re.compile(r"[pP][aA][sS][\w]*\s*[=\-:]*\s*([\w]*)")]
+
 EVEBOARD_URL = 'https://eveskillboard.com/pilot/%s'
-R_PILOT_NAME = r"eveskillboard.com/pilot\/([\w'-]+)"
-RS_PWD = [re.compile(r"[pP][wW][\w]*\s*[=\-\:]*\s*([\w]*)"), re.compile(r"[pP][aA][sS][\w]*\s*[=\-\:]*\s*([\w]*)")]
 FORUM_URL = 'https://forums.eveonline.com/'
 BAZAAR_URL = 'c/marketplace/character-bazaar/l/latest.json?page=%i'
-THREAD_URL = 't/%s/%i'
+THREAD_URL = 't/%i.json'
 
 
 def get_soup(html):
@@ -100,7 +101,7 @@ def parse_stats(soup):
             data['unallocated_sp'] = int(get_td(tr))
         if 'Yearly Remap'.lower() in tr.text.lower():
             try:
-                data['unallocated_sp'] = int(get_td(tr))
+                data['remaps'] += int(get_td(tr))
             except ValueError:
                 pass  # no yearly remap
         if 'Bonus Remaps'.lower() in tr.text.lower():
@@ -169,28 +170,40 @@ def scrape_character(s, charname, password=None):
 
 def scrape_thread(s, thread):
     logger.debug("Scraping thread {0}".format(thread))
-    response = s.get(FORUM_URL + THREAD_URL % (thread['slug'], thread['thread_id']))
+    response = s.get(FORUM_URL + THREAD_URL % thread['thread_id'])
     if response.status_code == 200:
-        thread_soup = get_soup(response.content)
+        thread_data = json.loads(response.content, encoding='utf-8')
     else:
-        logger.warning('Failed to get thread with id %i, status %i' % (thread['id'], response.status_code))
+        logger.warning('Failed to get thread with id %i, status %i' % (thread['thread_id'], response.status_code))
         return None
-    first_post = thread_soup.select('div.post')[0]
-    eveboard_link = first_post.find('a', href=re.compile('.*eveskillboard.com/pilot/.*'))
+    first_post = thread_data['post_stream']['posts'][0]
+    eveboard_link = None
+    pilot_name = ''
+    for link in first_post['link_counts']:
+        match = R_PILOT_NAME.match(link['url'])
+        if match:
+            pilot_name = match.group(1)
+            eveboard_link = link['url']
+            break
     if eveboard_link:
         logger.debug("Found eveboard link {0}".format(eveboard_link))
-        pilot_name = eveboard_link['href'].split('/pilot/')[1]
+        first_post_soup = get_soup(first_post['cooked'])
         # clean up tags and bbcode
-        for a in first_post('a'):
+        for a in first_post_soup('a'):
             a.extract()
-        for img in first_post('img'):
+        for img in first_post_soup('img'):
             img.extract()
-        first_post = first_post.prettify().replace('<br />', ' ').replace('\n', '').replace('<i>', '').replace(
-            '</i>', '').replace('<b>', '').replace('</b>', '')
+        first_post_text = first_post_soup.prettify() \
+            .replace('<br />', ' ') \
+            .replace('\n', '') \
+            .replace('<i>', '') \
+            .replace('</i>', '') \
+            .replace('<b>', '') \
+            .replace('</b>', '')
         # find them passwords!
         passwords = []
         for regs in RS_PWD:
-            potential_passwords = regs.finditer(first_post)
+            potential_passwords = regs.finditer(first_post_text)
             for match in potential_passwords:
                 if match.group(1) not in passwords:
                     logger.debug("Found eveboard password {0}".format(match.group(1)))
@@ -263,7 +276,6 @@ def scrape_eveo(page_range):
             t = Thread(
                 thread_id=thread['thread_id'],
                 last_update=thread['last_post'],
-                thread_text='',
                 thread_title=thread['title'],
                 thread_slug=thread['slug'],
             )

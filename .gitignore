@@ -2,3 +2,5 @@
 charsearch_app/migrations/
 /ecs.db
 *.sqlite
+*.bz2
+*.md5

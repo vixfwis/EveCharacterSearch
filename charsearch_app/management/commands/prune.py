@@ -37,9 +37,6 @@ def prune_threads(days):
     for pruner in to_prune:
         print('Removing [%s] thread that is expired past %s days' % (pruner.thread_title, days))
         if pruner.character:
-            for skill in pruner.character.skills.all():
-                skill.delete()
-            for standing in pruner.character.standings.all():
-                standing.delete()
             pruner.character.delete()
-    to_prune.delete()
+        else:
+            pruner.delete()

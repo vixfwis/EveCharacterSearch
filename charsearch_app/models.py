@@ -47,7 +47,6 @@ class CharSkill(models.Model):
 class Thread(models.Model):
     last_update = models.DateTimeField(default=now, db_index=True)
     blacklisted = models.BooleanField()
-    thread_text = models.TextField(null=True)
     thread_title = models.TextField()
     thread_id = models.IntegerField()
     thread_slug = models.TextField()

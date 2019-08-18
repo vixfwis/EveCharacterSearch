@@ -24,7 +24,7 @@ class Command(BaseCommand):
 def update_skills():
     print('Updating skills')
     ship_query = open('charsearch_app/tasks/get_skills.sql').read()
-    conn = sqlite3.connect('eve-sde.sqlite')
+    conn = sqlite3.connect('sqlite-latest.sqlite')
     c = conn.cursor()
     created_count = 0
     affected_count = 0
