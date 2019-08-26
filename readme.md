@@ -8,50 +8,44 @@ ECS leverages [Django][django] and [BeautifulSoup][beautifulsoup].
 
 ## Getting Started
 
-### OS X
+### Linux
 
-Make sure Xcode Command Line Tools installed and up to date.
+Install `pipenv`
 
 ```shell
-$ xcode-select --install
+$ pip3 install pipenv
 ```
 
-Use [Homebrew](https://brew.sh) to install `pyenv` and `virtualwrapper`.
+Install requirements
 
 ```shell
-$ brew install pyenv-virtualenvwrapper
+$ pipenv install
 ```
 
-Use `pyenv` to install a python to use with `virtualwrapper`.
+Get into virtual shell. Edit `environ` if necessary
 
 ```shell
-$ pyenv install 2.7.12
-$ pyenv global 2.7.12
+$ pipenv shell
+$ source environ
 ```
 
-Configure your shell session for use with `virtualenvwrapper`.
+Prepare your local instance
 
 ```shell
-$ export PYENV_ROOT=/usr/local/var/pyenv
-$ eval "$(pyenv init -)"
-$ pyenv virtualenvwrapper
+$ python manage.py makemigrations
+$ python manage.py migrate
+$ python manage.py update_api
 ```
 
-Create a new `virtualenv` for `EveCharacterSearch`.
+Scrape some bazaar threads
 
 ```shell
-mkvirtualenv -r requirements.txt eve
-workon eve
+$ python manage.py scrape_threads --pages 5
 ```
 
 Start a local instance of `EveCharacterSearch`.
 
 ```shell
-cp ./evecharsearch/settings_example.py ./evecharsearch/settings.py
-python manage.py makemigrations
-python manage.py migrate
-python manage.py update_api
-python manage.py scrape_threads # use --pages to scrap more than 1 page
 python manage.py runserver
 ```
 

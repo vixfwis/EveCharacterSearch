@@ -1,0 +1,11 @@
+#!/bin/bash
+
+export DJANGO_DEV=1
+export DJANGO_LOG_LEVEL="INFO"
+
+export DJANGO_SECRET="very secret key"
+export SENTRY_DSN=""
+export POSTGRES_DB=""
+export POSTGRES_USER=""
+export POSTGRES_PASSWORD=""
+export POSTGRES_HOST="localhost"
